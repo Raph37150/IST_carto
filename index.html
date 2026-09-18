@@ -136,10 +136,16 @@
     flex:none;
   }
   .swatch{
-    width:11px;height:11px;
-    border-radius:3px;
+    width:18px;height:18px;
+    border-radius:5px;
     flex:none;
-    box-shadow:0 0 0 1px rgba(0,0,0,.15) inset;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    line-height:1;
+    background:#eef1f4;
+    box-shadow:0 0 0 1px rgba(0,0,0,.1) inset;
   }
   .check-row .lbl{
     flex:1;
@@ -212,11 +218,12 @@
   .popup-tag{
     display:inline-block;
     margin-top:6px;
-    padding:2px 8px;
+    padding:3px 9px;
     border-radius:100px;
     font-size:11px;
     font-weight:600;
-    color:#fff;
+    color:#1c2530;
+    background:#eef1f4;
   }
   .popup-closed{
     color:#b34700;
@@ -329,12 +336,32 @@ const SITES = [{"nom":"GITES LA TESTE","type":"GITE","casi":"CASI BORDEAUX","clo
 const TYPES = [...new Set(SITES.map(s => s.type))].sort();
 const CASIS = [...new Set(SITES.map(s => s.casi))].sort();
 
-function colorForIndex(i, total){
-  const hue = Math.round((360 * i) / total);
-  return `hsl(${hue}, 68%, 45%)`;
+/* Une icône (emoji) distincte par type d'entité, plutôt qu'un code couleur */
+const TYPE_ICONS = {
+  "ACCUEIL DE LOISIRS SANS HEBERGEMENT": "🧩",
+  "ANTENNE": "📡",
+  "ASSOCIATION": "🤝",
+  "BASE NAUTIQUE": "⛵",
+  "BIBLIOTHEQUE": "📚",
+  "CENTRE DE LOISIRS SANS HEBERGEMENT": "🎠",
+  "CENTRE DE VACANCES": "🏖️",
+  "CENTRE JEUNESSE": "🧑‍🤝‍🧑",
+  "CENTRE MULTIACTIVITES": "🏛️",
+  "GITE": "🏡",
+  "INSTALLATION SPORTIVE": "⚽",
+  "JARDIN D'ENFANTS": "🧸",
+  "JARDIN DU CHEMINOT": "🌳",
+  "LUDOTHEQUE": "🎲",
+  "POINT LECTURE": "📖",
+  "RESTAURANT": "🍽️",
+  "SALLE DES FETES": "🎉",
+  "SALLE DES SPECTACLE": "🎭",
+  "SALLE POLYVALENTE": "🏢",
+  "STOCKAGE": "📦"
+};
+function iconForType(type){
+  return TYPE_ICONS[type] || "📍";
 }
-const TYPE_COLORS = {};
-TYPES.forEach((t,i) => TYPE_COLORS[t] = colorForIndex(i, TYPES.length));
 
 /* ============ ETAT DES FILTRES ============ */
 const state = {
@@ -354,7 +381,7 @@ TYPES.forEach(t => {
   row.className = 'check-row';
   row.innerHTML = `
     <input type="checkbox" data-kind="type" data-val="${encodeURIComponent(t)}" checked>
-    <span class="swatch" style="background:${TYPE_COLORS[t]}"></span>
+    <span class="swatch">${iconForType(t)}</span>
     <span class="lbl">${t.charAt(0) + t.slice(1).toLowerCase()}</span>
     <span class="n">${countByType(t)}</span>
   `;
@@ -388,18 +415,20 @@ const clusterGroup = L.markerClusterGroup({
 map.addLayer(clusterGroup);
 
 function makeIcon(type){
-  const color = TYPE_COLORS[type] || '#555';
+  const glyph = iconForType(type);
   return L.divIcon({
     className: '',
     html: `<div style="
-        width:16px;height:16px;border-radius:50%;
-        background:${color};
-        border:2px solid #fff;
-        box-shadow:0 0 0 1px rgba(0,0,0,.35);
-      "></div>`,
-    iconSize: [16,16],
-    iconAnchor: [8,8],
-    popupAnchor: [0,-8]
+        width:26px;height:26px;border-radius:50%;
+        background:#fff;
+        border:2px solid #2c3844;
+        box-shadow:0 1px 3px rgba(0,0,0,.4);
+        display:flex;align-items:center;justify-content:center;
+        font-size:14px;line-height:1;
+      ">${glyph}</div>`,
+    iconSize: [26,26],
+    iconAnchor: [13,13],
+    popupAnchor: [0,-13]
   });
 }
 
@@ -411,7 +440,7 @@ const markers = SITES.map(site => {
     <div class="popup-row"><b>Ville :</b> ${escapeHtml(site.ville)}${site.cp ? ' ('+site.cp+')' : ''}</div>
     <div class="popup-row"><b>Région :</b> ${escapeHtml(site.region || '—')}</div>
     <div class="popup-row"><b>CASI :</b> ${escapeHtml(site.casi)}</div>
-    <span class="popup-tag" style="background:${TYPE_COLORS[site.type]}">${escapeHtml(site.type)}</span>
+    <span class="popup-tag">${iconForType(site.type)} ${escapeHtml(site.type)}</span>
     ${closedTag}
   `);
   marker.siteData = site;
