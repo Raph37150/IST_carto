@@ -188,6 +188,22 @@
   #reset-btn:hover{
     background:#e9edf0;
   }
+  #export-btn{
+    width:100%;
+    margin-top:8px;
+    padding:9px;
+    border-radius:8px;
+    border:1px solid var(--accent);
+    background:var(--accent-soft);
+    color:var(--accent);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  #export-btn:hover{
+    background:var(--accent);
+    color:#fff;
+  }
 
   /* ---------- Map ---------- */
   #map-wrap{
@@ -394,6 +410,7 @@
       </div>
 
       <button id="reset-btn">Réinitialiser les filtres</button>
+      <button id="export-btn">📥 Exporter les sites affichés (.xlsx)</button>
     </div>
   </div>
 
@@ -406,6 +423,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script>
 /* ============ DONNEES ============ */
@@ -452,6 +470,7 @@ const state = {
   includeClosed: true,
   includeActive: true
 };
+let visibleMarkers = [];
 
 /* ============ CONSTRUCTION SIDEBAR ============ */
 function countByType(t){ return SITES.filter(s => s.type === t).length; }
@@ -610,6 +629,7 @@ function applyFilters(fitMap){
     visible++;
   });
   clusterGroup.addLayers(toAdd);
+  visibleMarkers = toAdd;
 
   document.getElementById('count-badge').textContent =
     `${visible} site${visible>1?'s':''} affiché${visible>1?'s':''} / ${SITES.length}`;
@@ -618,6 +638,36 @@ function applyFilters(fitMap){
     const bounds = L.latLngBounds(toAdd.map(m => m.getLatLng()));
     map.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
   }
+}
+
+/* ============ EXPORT EXCEL (.xlsx) ============ */
+function exportXLSX(){
+  const headers = [
+    "Nom de l'entité", "Type d'entité", "CASI", "DIT", "Ville", "Code postal",
+    "Région", "Statut", "Date fin d'activité",
+    "Surface terrain (m²)", "Surface bâtiment (m²)", "Latitude", "Longitude"
+  ];
+  const rows = visibleMarkers.map(m => {
+    const s = m.siteData;
+    return [
+      s.nom, s.type, s.casi, s.dit, s.ville, s.cp, s.region,
+      s.cloture ? 'Clôturé' : 'Actif',
+      s.date_fin || '',
+      s.surf_terrain || '', s.surf_bat || '',
+      s.lat, s.lng
+    ];
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = [
+    {wch:32},{wch:26},{wch:22},{wch:20},{wch:20},{wch:10},
+    {wch:20},{wch:10},{wch:14},{wch:14},{wch:16},{wch:10},{wch:10}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Sites");
+
+  const date = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `sites_carto_ist_${date}.xlsx`);
 }
 
 /* ============ EVENEMENTS UI ============ */
@@ -694,6 +744,8 @@ document.getElementById('reset-btn').addEventListener('click', () => {
   applyFilters();
   map.setView([46.6, 2.3], 6);
 });
+
+document.getElementById('export-btn').addEventListener('click', exportXLSX);
 
 /* ============ SIDEBAR MOBILE ============ */
 function toggleSidebar(){
