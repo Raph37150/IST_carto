@@ -137,13 +137,13 @@
     flex:none;
   }
   .swatch{
-    width:26px;height:26px;
-    border-radius:6px;
+    width:34px;height:34px;
+    border-radius:7px;
     flex:none;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:17px;
+    font-size:22px;
     line-height:1;
     background:#eef1f4;
     box-shadow:0 0 0 1px rgba(0,0,0,.1) inset;
@@ -526,21 +526,34 @@ map.addLayer(clusterGroup);
 
 function makeIcon(type, closed){
   const glyph = iconForType(type);
-  const bg = closed ? '#e0392b' : '#fff';
-  const border = closed ? '#8f1d13' : '#2c3844';
+  if (closed){
+    return L.divIcon({
+      className: '',
+      html: `<div style="
+          width:36px;height:36px;border-radius:50%;
+          background:#e0392b;
+          border:2.5px solid #8f1d13;
+          box-shadow:0 0 0 3px rgba(255,255,255,.95), 0 2px 7px rgba(0,0,0,.55);
+          display:flex;align-items:center;justify-content:center;
+          font-size:19px;line-height:1;
+        ">${glyph}</div>`,
+      iconSize: [36,36],
+      iconAnchor: [18,18],
+      popupAnchor: [0,-18]
+    });
+  }
+  /* Site actif : icône seule, sans cercle, avec un léger halo blanc pour rester lisible sur tous les fonds */
   return L.divIcon({
     className: '',
     html: `<div style="
-        width:36px;height:36px;border-radius:50%;
-        background:${bg};
-        border:2.5px solid ${border};
-        box-shadow:0 0 0 3px rgba(255,255,255,.95), 0 2px 7px rgba(0,0,0,.55);
+        width:36px;height:36px;
         display:flex;align-items:center;justify-content:center;
-        font-size:19px;line-height:1;
+        font-size:28px;line-height:1;
+        filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 1px 3px rgba(0,0,0,.5));
       ">${glyph}</div>`,
     iconSize: [36,36],
     iconAnchor: [18,18],
-    popupAnchor: [0,-18]
+    popupAnchor: [0,-16]
   });
 }
 
